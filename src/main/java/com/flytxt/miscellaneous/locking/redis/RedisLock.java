@@ -23,9 +23,9 @@ public class RedisLock implements DistributedLock {
 
     private static final String HBASE_INSERT_LOCK = "hbaseInsertLock";
 
-    public RedisLock(String redisServerIP, String redisServerPort) {
+    public RedisLock(String redisServerIPAndPort) {
         redisConfig = new Config();
-        redisConfig.useSingleServer().setAddress(redisServerIP + ":" + redisServerPort);
+        redisConfig.useSingleServer().setAddress(redisServerIPAndPort);
         redissonClient = Redisson.create(redisConfig);
         redisFairLock = redissonClient.getFairLock(HBASE_INSERT_LOCK);
     }

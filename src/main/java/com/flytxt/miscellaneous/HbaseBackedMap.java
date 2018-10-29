@@ -24,11 +24,11 @@ public class HbaseBackedMap extends HBaseDataInteractor {
 
     private long lastRowValue;
 
-    public HbaseBackedMap(String serverIP, String serverPort) {
+    public HbaseBackedMap(String redisServerIPAndPort) {
         super();
         dataStorageMap = new HashMap<String, Long>();
         lastRowValue = 0;
-        distributedLock = new RedisLock(serverIP, serverPort);
+        distributedLock = new RedisLock(redisServerIPAndPort);
     }
 
     private void loadData(String key, Long value) {

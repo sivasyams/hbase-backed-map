@@ -8,9 +8,9 @@ package com.flytxt.miscellaneous.locking;
  */
 public interface DistributedLock {
 
-    public void accquireLock() throws Exception;
+    public void accquire() throws Exception;
 
-    public void releaseLock() throws Exception;
+    public void release() throws Exception;
 
     public boolean isLocked() throws Exception;
 }

@@ -24,20 +24,20 @@ public class HbaseBackedMap extends HBaseDataInteractor {
 
     private long lastRowValue;
 
-    public HbaseBackedMap() {
+    public HbaseBackedMap(String serverIP, String serverPort) {
         super();
         dataStorageMap = new HashMap<String, Long>();
         lastRowValue = 0;
-        distributedLock = new RedisLock("demo-node3.flytxt.com", "31598");
+        distributedLock = new RedisLock(serverIP, serverPort);
     }
 
     private void loadData(String key, Long value) {
         try {
-            distributedLock.accquireLock();
+            distributedLock.accquire();
             HbaseDataEntity hbaseDataEntity = new HbaseDataEntity(key, value);
             super.putDataToHbase(hbaseDataEntity);
             dataStorageMap.put(key, value);
-            distributedLock.releaseLock();
+            distributedLock.release();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

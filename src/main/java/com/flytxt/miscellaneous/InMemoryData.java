@@ -8,12 +8,12 @@ public class InMemoryData {
         hbaseBackedMap = new HbaseBackedMap(redisServerIPAndPort);
     }
 
-    public long put(String key) {
+    public static long put(String key) {
         long hbaseKey = hbaseBackedMap.put(key);
         return hbaseKey;
     }
 
-    public void remove(String key) {
+    public static void remove(String key) {
         hbaseBackedMap.remove(key);
     }
 }

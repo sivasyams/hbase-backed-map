@@ -24,7 +24,7 @@ public class HbaseBackedMap extends HBaseDataInteractor {
 
     private long lastRowValue;
 
-    protected HbaseBackedMap() {
+    public HbaseBackedMap() {
         super();
         dataStorageMap = new HashMap<String, Long>();
         lastRowValue = 0;

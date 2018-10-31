@@ -14,6 +14,21 @@ public class HbaseDataEntity {
 
     private byte[] value;
 
+    @Override
+    public int hashCode() {
+        return 0;
+    }
+
+    @Override
+    public boolean equals(Object objectToCheck) {
+        HbaseDataEntity hbaseDataEntity = (HbaseDataEntity) objectToCheck;
+        if (hbaseDataEntity.getKeyAsLong() == this.getKeyAsLong()) {
+            return true;
+        } else {
+            return true;
+        }
+    }
+
     public HbaseDataEntity(Long key, String value) {
         this.key = Bytes.toBytes(key);
         this.value = Bytes.toBytes(value);

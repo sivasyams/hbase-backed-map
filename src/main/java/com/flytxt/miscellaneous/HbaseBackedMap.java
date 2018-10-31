@@ -32,12 +32,11 @@ public class HbaseBackedMap extends HBaseDataInteractor {
         distributedLock = new RedisLock(redisServerIPAndPort);
     }
 
-    public void put(Long key, String value) {
+    private void put(HbaseDataEntity hbaseDataEntity) {
         try {
             distributedLock.accquire();
-            HbaseDataEntity hbaseDataEntity = new HbaseDataEntity(key, value);
             super.putDataToHbase(hbaseDataEntity);
-            dataStorageMap.put(key, value);
+            dataStorageMap.put(hbaseDataEntity.getKeyAsLong(), hbaseDataEntity.getValueAsString());
             distributedLock.release();
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -89,12 +88,12 @@ public class HbaseBackedMap extends HBaseDataInteractor {
                 if (lastRowValue == 0) {
                     HbaseDataEntity lastRowData = super.getLastRowData();
                     if (lastRowData != null && lastRowData.getKeyAsLong() != null) {
-                        lastRowValue = Bytes.toLong(lastRowData.getValueAsByte());
+                        lastRowValue = lastRowData.getKeyAsLong();
                     }
                 }
                 long newlyGeneratedLastRowValue = lastRowValue + 1;
-                this.put(newlyGeneratedLastRowValue, value);
-                dataStorageMap.put(newlyGeneratedLastRowValue, value);
+                hbaseDataEntity = new HbaseDataEntity(newlyGeneratedLastRowValue, value);
+                this.put(hbaseDataEntity);
                 lastRowValue = newlyGeneratedLastRowValue;
                 return newlyGeneratedLastRowValue;
             } else {

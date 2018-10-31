@@ -62,8 +62,6 @@ public abstract class HBaseDataInteractor {
         Put putOperation = new Put(hbaseDataEntity.getKeyAsByte());
         putOperation.add(Bytes.toBytes(COLUMN_FAMILY), Bytes.toBytes(COLUMN_NAME), hbaseDataEntity.getValueAsByte());
         hbaseTable.put(putOperation);
-        hbaseTable.flushCommits();
-        hbaseTable.close();
     }
 
     protected HbaseDataEntity getDataFromHBase(byte[] key) throws IOException {
@@ -80,7 +78,6 @@ public abstract class HBaseDataInteractor {
         Delete deleteOperation = new Delete(key);
         deleteOperation.deleteColumn(Bytes.toBytes(COLUMN_FAMILY), Bytes.toBytes(COLUMN_NAME));
         hbaseTable.delete(deleteOperation);
-        hbaseTable.close();
     }
 
     protected HbaseDataEntity getLastRowData() throws IOException {

@@ -15,6 +15,8 @@ import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
+import org.apache.hadoop.hbase.filter.CompareFilter.CompareOp;
+import org.apache.hadoop.hbase.filter.SingleColumnValueFilter;
 import org.apache.hadoop.hbase.util.Bytes;
 
 import com.flytxt.miscellaneous.entity.HbaseDataEntity;
@@ -51,7 +53,6 @@ public abstract class HBaseDataInteractor {
                 hbaseAdmin.createTable(hbaseTableDescriptor);
             }
             hbaseTable = new HTable(hbaseConfig, TABLE_NAME);
-            hbaseScanner = new Scan();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -83,17 +84,35 @@ public abstract class HBaseDataInteractor {
     }
 
     protected HbaseDataEntity getLastRowData() throws IOException {
+        hbaseScanner = new Scan();
         hbaseScanner.setReversed(true);
         ResultScanner hbaseResultScanner = hbaseTable.getScanner(hbaseScanner);
         Result scannedResult = hbaseResultScanner.next();
+        hbaseResultScanner.close();
         if (scannedResult != null) {
             byte[] rowKey = scannedResult.getRow();
             byte[] rowValue = scannedResult.getValue(Bytes.toBytes(COLUMN_FAMILY), Bytes.toBytes(COLUMN_NAME));
-            hbaseResultScanner.close();
             HbaseDataEntity hbaseDataEntity = new HbaseDataEntity(rowKey, rowValue);
             return hbaseDataEntity;
         } else {
             return null;
         }
+    }
+
+    protected HbaseDataEntity scanHbaseForEntity(byte[] entityValue) throws IOException {
+        HbaseDataEntity hbaseDataEntity = null;
+        SingleColumnValueFilter hbaseScanFilter = new SingleColumnValueFilter(Bytes.toBytes(COLUMN_FAMILY), Bytes.toBytes(COLUMN_NAME), CompareOp.EQUAL, entityValue);
+        hbaseScanner = new Scan();
+        hbaseScanner.setReversed(false);
+        hbaseScanner.setFilter(hbaseScanFilter);
+        hbaseScanner.addFamily(Bytes.toBytes(COLUMN_FAMILY));
+        hbaseScanner.addColumn(Bytes.toBytes(COLUMN_FAMILY), Bytes.toBytes(COLUMN_NAME));
+        ResultScanner filteredResultScanner = hbaseTable.getScanner(hbaseScanner);
+        for (Result filteredResult : filteredResultScanner) {
+            byte[] filteredRowKey = filteredResult.getRow();
+            byte[] filteredRowValue = filteredResult.getValue(Bytes.toBytes(COLUMN_FAMILY), Bytes.toBytes(COLUMN_NAME));
+            hbaseDataEntity = new HbaseDataEntity(filteredRowKey, filteredRowValue);
+        }
+        return hbaseDataEntity;
     }
 }

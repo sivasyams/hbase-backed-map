@@ -14,7 +14,7 @@ public class HbaseDataEntity {
 
     private byte[] value;
 
-    public HbaseDataEntity(String key, Long value) {
+    public HbaseDataEntity(Long key, String value) {
         this.key = Bytes.toBytes(key);
         this.value = Bytes.toBytes(value);
     }
@@ -32,11 +32,11 @@ public class HbaseDataEntity {
         return value;
     }
 
-    public String getKeyAsString() {
-        return Bytes.toString(key);
+    public Long getKeyAsLong() {
+        return Bytes.toLong(key);
     }
 
-    public Long getValueAsLong() {
-        return Bytes.toLong(value);
+    public String getValueAsString() {
+        return Bytes.toString(value);
     }
 }

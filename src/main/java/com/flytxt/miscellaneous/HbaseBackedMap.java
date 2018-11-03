@@ -19,24 +19,29 @@ import com.flytxt.miscellaneous.locking.redis.RedisLock;
  */
 public class HbaseBackedMap extends HBaseDataInteractor {
 
-    private HashMap<Long, String> dataStorageMap;
+    private HashMap<Long, byte[]> dataStorageMap;
 
     private DistributedLock distributedLock;
 
     private long lastRowValue;
 
-    public HbaseBackedMap(String redisServerIPAndPort) {
+    public HbaseBackedMap() {
         super();
-        dataStorageMap = new HashMap<Long, String>();
+        dataStorageMap = new HashMap<Long, byte[]>();
         lastRowValue = 0;
-        distributedLock = new RedisLock(redisServerIPAndPort);
+    }
+
+    public void setRedisLock(String serverDetails) {
+        if (distributedLock == null) {
+            distributedLock = new RedisLock(serverDetails);
+        }
     }
 
     private void put(HbaseDataEntity hbaseDataEntity) {
         try {
             distributedLock.accquire();
             super.putDataToHbase(hbaseDataEntity);
-            dataStorageMap.put(hbaseDataEntity.getKeyAsLong(), hbaseDataEntity.getValueAsString());
+            dataStorageMap.put(hbaseDataEntity.getKeyAsLong(), hbaseDataEntity.getValueAsByte());
             distributedLock.release();
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -46,11 +51,11 @@ public class HbaseBackedMap extends HBaseDataInteractor {
     public String get(Long key) {
         try {
             if (dataStorageMap.containsKey(key)) {
-                return dataStorageMap.get(key);
+                return Bytes.toString(dataStorageMap.get(key));
             } else {
                 HbaseDataEntity hbaseDataEntity = super.getDataFromHBase(Bytes.toBytes(key));
                 if (hbaseDataEntity.getValueAsByte() != null) {
-                    dataStorageMap.put(hbaseDataEntity.getKeyAsLong(), hbaseDataEntity.getValueAsString());
+                    dataStorageMap.put(hbaseDataEntity.getKeyAsLong(), hbaseDataEntity.getValueAsByte());
                     return hbaseDataEntity.getValueAsString();
                 }
             }
@@ -77,8 +82,8 @@ public class HbaseBackedMap extends HBaseDataInteractor {
                 Thread.sleep(5000);
                 this.put(value);
             }
-            for (Entry<Long, String> inMemoryStringValue : dataStorageMap.entrySet()) {
-                if (inMemoryStringValue.getValue().equals(value)) {
+            for (Entry<Long, byte[]> inMemoryStringValue : dataStorageMap.entrySet()) {
+                if (Bytes.toString(inMemoryStringValue.getValue()).equals(value)) {
                     return inMemoryStringValue.getKey();
                 }
 
@@ -97,7 +102,7 @@ public class HbaseBackedMap extends HBaseDataInteractor {
                 lastRowValue = newlyGeneratedLastRowValue;
                 return newlyGeneratedLastRowValue;
             } else {
-                dataStorageMap.put(hbaseDataEntity.getKeyAsLong(), hbaseDataEntity.getValueAsString());
+                dataStorageMap.put(hbaseDataEntity.getKeyAsLong(), hbaseDataEntity.getValueAsByte());
                 return hbaseDataEntity.getKeyAsLong();
             }
         } catch (Exception e) {

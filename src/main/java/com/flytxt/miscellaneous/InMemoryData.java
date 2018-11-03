@@ -2,10 +2,10 @@ package com.flytxt.miscellaneous;
 
 public class InMemoryData {
 
-    private static HbaseBackedMap hbaseBackedMap;
+    private static HbaseBackedMap hbaseBackedMap = new HbaseBackedMap();
 
-    public static void setRedisContainerDetails(String redisServerIPAndPort) {
-        hbaseBackedMap = new HbaseBackedMap(redisServerIPAndPort);
+    public static void setRedisLock(String serverDetails) {
+        hbaseBackedMap.setRedisLock(serverDetails);
     }
 
     public static long store(String stringValue) {

@@ -1,6 +1,9 @@
 package com.flytxt.miscellaneous.hbase;
 
 import java.io.IOException;
+import java.io.InterruptedIOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
@@ -14,6 +17,7 @@ import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
+import org.apache.hadoop.hbase.client.RetriesExhaustedWithDetailsException;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.filter.CompareFilter.CompareOp;
 import org.apache.hadoop.hbase.filter.SingleColumnValueFilter;
@@ -43,6 +47,8 @@ public abstract class HBaseDataInteractor {
 
     private static final String COLUMN_NAME = "stringValue";
 
+    private List<Put> bulkPutOperation = new ArrayList<Put>();
+
     protected HBaseDataInteractor() {
         try {
             hbaseConfig = HBaseConfiguration.create();
@@ -61,7 +67,12 @@ public abstract class HBaseDataInteractor {
     protected void putDataToHbase(HbaseDataEntity hbaseDataEntity) throws IOException {
         Put putOperation = new Put(hbaseDataEntity.getKeyAsByte());
         putOperation.add(Bytes.toBytes(COLUMN_FAMILY), Bytes.toBytes(COLUMN_NAME), hbaseDataEntity.getValueAsByte());
-        hbaseTable.put(putOperation);
+        bulkPutOperation.add(putOperation);
+    }
+
+    protected void commitHbaseData() throws RetriesExhaustedWithDetailsException, InterruptedIOException {
+        hbaseTable.put(bulkPutOperation);
+        hbaseTable.flushCommits();
     }
 
     protected HbaseDataEntity getDataFromHBase(byte[] key) throws IOException {

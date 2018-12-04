@@ -4,8 +4,8 @@ public class InMemoryData {
 
     private static HbaseBackedMap hbaseBackedMap = new HbaseBackedMap();
 
-    public static void setRedisLock(String serverDetails) {
-        hbaseBackedMap.setRedisLock(serverDetails);
+    public static void setRedisDetails(String serverDetails) {
+        hbaseBackedMap.setRedisDetails(serverDetails);
     }
 
     public static long store(String stringValue) {
@@ -20,5 +20,9 @@ public class InMemoryData {
     public static String read(Long key) {
         String storedStringValue = hbaseBackedMap.get(key);
         return storedStringValue;
+    }
+
+    public static void exportToHbase() {
+        hbaseBackedMap.exportFromRedis();
     }
 }

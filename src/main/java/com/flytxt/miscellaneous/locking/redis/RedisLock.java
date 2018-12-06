@@ -21,13 +21,13 @@ public class RedisLock implements DistributedLock {
 
     private RLock redisFairLock;
 
-    private static final String HBASE_INSERT_LOCK = "hbaseInsertLock";
+    private static final String DATA_INSERT_LOCK = "dataInsertLock";
 
     public RedisLock(String serverDetails) {
         redisConfig = new Config();
         redisConfig.useSingleServer().setAddress(serverDetails);
         redissonClient = Redisson.create(redisConfig);
-        redisFairLock = redissonClient.getFairLock(HBASE_INSERT_LOCK);
+        redisFairLock = redissonClient.getFairLock(DATA_INSERT_LOCK);
     }
 
     public void accquire() {

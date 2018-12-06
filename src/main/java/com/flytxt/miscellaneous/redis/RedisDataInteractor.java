@@ -15,19 +15,29 @@ public class RedisDataInteractor {
     private Jedis jedis;
 
     public RedisDataInteractor(String serverHostName) {
-        jedis = new Jedis(serverHostName);
+        String redisHost = serverHostName.split("[:]")[0];
+        Integer redisPort = Integer.parseInt(serverHostName.split("[:]")[1]);
+        jedis = new Jedis(redisHost, redisPort);
     }
 
     public void putDataToRedis(HbaseDataEntity hbaseDataEntity) {
-        jedis.set(hbaseDataEntity.getKeyAsByte(), hbaseDataEntity.getValueAsByte());
+        jedis.set(hbaseDataEntity.getValueAsByte(), hbaseDataEntity.getKeyAsByte());
     }
 
-    public HbaseDataEntity getDataFromRedis(byte[] key) {
-        HbaseDataEntity hbaseDataEntity = new HbaseDataEntity(key, jedis.get(key));
+    public HbaseDataEntity getDataFromRedis(byte[] hbaseValue) {
+        byte[] hbaseKey = jedis.get(hbaseValue);
+        if (hbaseKey == null) {
+            return null;
+        }
+        HbaseDataEntity hbaseDataEntity = new HbaseDataEntity(hbaseKey, hbaseValue);
         return hbaseDataEntity;
     }
 
     public void removeDataFromRedis(byte[] key) {
         jedis.del(key);
+    }
+
+    public Jedis getHandle() {
+        return jedis;
     }
 }

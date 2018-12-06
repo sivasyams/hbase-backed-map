@@ -73,9 +73,10 @@ public abstract class HBaseDataInteractor {
     protected void commitHbaseData() throws RetriesExhaustedWithDetailsException, InterruptedIOException {
         hbaseTable.put(bulkPutOperation);
         hbaseTable.flushCommits();
+        bulkPutOperation.clear();
     }
 
-    protected HbaseDataEntity getDataFromHBase(byte[] key) throws IOException {
+    protected HbaseDataEntity getDataFromHbase(byte[] key) throws IOException {
         HbaseDataEntity hbaseDataEntity = null;
         Get getOperation = new Get(key);
         getOperation.addFamily(Bytes.toBytes(COLUMN_FAMILY));

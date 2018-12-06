@@ -1,6 +1,12 @@
 package com.flytxt.miscellaneous;
 
-public class InMemoryData {
+/**
+ * The FlyDataSet class
+ *
+ * @author sivasyam
+ *
+ */
+public class FlyDataSet {
 
     private static HbaseBackedMap hbaseBackedMap = new HbaseBackedMap();
 
@@ -22,7 +28,7 @@ public class InMemoryData {
         return storedStringValue;
     }
 
-    public static void exportToHbase() {
-        hbaseBackedMap.exportFromRedis();
+    public static void persist() {
+        hbaseBackedMap.commitData();
     }
 }

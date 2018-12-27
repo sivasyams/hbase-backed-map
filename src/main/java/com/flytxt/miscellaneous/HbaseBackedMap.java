@@ -41,7 +41,7 @@ public class HbaseBackedMap extends HBaseDataInteractor {
         super();
         try {
             this.updateHbaseLastRowKey();
-            scheduledExecutor.schedule(hbaseDataCommiter, 10, TimeUnit.SECONDS);
+            scheduledExecutor.scheduleWithFixedDelay(hbaseDataCommiter, 10, 10, TimeUnit.SECONDS);
         } catch (Exception e) {
             hbaseBackedMapLogger.error("ERROR: {}", e);
             throw new RuntimeException(e);

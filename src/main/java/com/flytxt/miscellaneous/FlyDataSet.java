@@ -19,16 +19,8 @@ public class FlyDataSet {
         return hbaseKey;
     }
 
-    public static void remove(Long key) {
-        hbaseBackedMap.remove(key);
-    }
-
     public static String read(Long key) {
         String storedStringValue = hbaseBackedMap.get(key);
         return storedStringValue;
-    }
-
-    public static void persist() {
-        hbaseBackedMap.commitData();
     }
 }

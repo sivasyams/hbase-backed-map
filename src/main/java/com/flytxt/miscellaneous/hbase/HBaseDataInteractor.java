@@ -22,7 +22,10 @@ import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.filter.CompareFilter.CompareOp;
 import org.apache.hadoop.hbase.filter.SingleColumnValueFilter;
 import org.apache.hadoop.hbase.util.Bytes;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import com.flytxt.miscellaneous.CustomDataMap;
 import com.flytxt.miscellaneous.entity.HbaseDataEntity;
 
 /**
@@ -47,6 +50,8 @@ public abstract class HBaseDataInteractor {
 
     private static final String COLUMN_NAME = "stringValue";
 
+    private final Logger hbaseDataInteractorLogger = LoggerFactory.getLogger(this.getClass());
+
     private List<Put> bulkPutOperation = new ArrayList<Put>();
 
     protected HBaseDataInteractor() {
@@ -60,6 +65,7 @@ public abstract class HBaseDataInteractor {
             }
             hbaseTable = new HTable(hbaseConfig, TABLE_NAME);
         } catch (IOException e) {
+            hbaseDataInteractorLogger.error("ERROR: {}", e);
             throw new RuntimeException(e);
         }
     }
@@ -110,10 +116,10 @@ public abstract class HBaseDataInteractor {
 
     protected HbaseDataEntity scanHbaseForEntity(byte[] entityValue) throws IOException {
         HbaseDataEntity hbaseDataEntity = null;
-        SingleColumnValueFilter hbaseScanFilter = new SingleColumnValueFilter(Bytes.toBytes(COLUMN_FAMILY), Bytes.toBytes(COLUMN_NAME), CompareOp.EQUAL, entityValue);
+        SingleColumnValueFilter hbaseEntityScanFilter = new SingleColumnValueFilter(Bytes.toBytes(COLUMN_FAMILY), Bytes.toBytes(COLUMN_NAME), CompareOp.EQUAL, entityValue);
         hbaseScanner = new Scan();
         hbaseScanner.setReversed(false);
-        hbaseScanner.setFilter(hbaseScanFilter);
+        hbaseScanner.setFilter(hbaseEntityScanFilter);
         hbaseScanner.addFamily(Bytes.toBytes(COLUMN_FAMILY));
         hbaseScanner.addColumn(Bytes.toBytes(COLUMN_FAMILY), Bytes.toBytes(COLUMN_NAME));
         ResultScanner filteredResultScanner = hbaseTable.getScanner(hbaseScanner);
@@ -122,6 +128,27 @@ public abstract class HBaseDataInteractor {
             byte[] filteredRowValue = filteredResult.getValue(Bytes.toBytes(COLUMN_FAMILY), Bytes.toBytes(COLUMN_NAME));
             hbaseDataEntity = new HbaseDataEntity(filteredRowKey, filteredRowValue);
         }
+        filteredResultScanner.close();
         return hbaseDataEntity;
+    }
+
+    protected void loadHbaseDataToMemory() {
+        try {
+            hbaseScanner = new Scan();
+            hbaseScanner.setReversed(false);
+            hbaseScanner.addFamily(Bytes.toBytes(COLUMN_FAMILY));
+            hbaseScanner.addColumn(Bytes.toBytes(COLUMN_FAMILY), Bytes.toBytes(COLUMN_NAME));
+            ResultScanner hbaseDataScanner = hbaseTable.getScanner(hbaseScanner);
+            for (Result hbaseData : hbaseDataScanner) {
+                byte[] hbaseDataKey = hbaseData.getRow();
+                byte[] hbaseDataValue = hbaseData.getValue(Bytes.toBytes(COLUMN_FAMILY), Bytes.toBytes(COLUMN_NAME));
+                HbaseDataEntity hbaseDataEntity = new HbaseDataEntity(hbaseDataKey, hbaseDataValue);
+                CustomDataMap.loadToMemory(hbaseDataEntity);
+            }
+            hbaseDataScanner.close();
+        } catch (IOException e) {
+            hbaseDataInteractorLogger.error("ERROR: {}", e);
+            throw new RuntimeException(e);
+        }
     }
 }

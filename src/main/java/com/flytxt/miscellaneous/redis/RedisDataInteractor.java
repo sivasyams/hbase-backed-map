@@ -1,5 +1,8 @@
 package com.flytxt.miscellaneous.redis;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.flytxt.miscellaneous.entity.HbaseDataEntity;
 
 import redis.clients.jedis.Jedis;
@@ -12,32 +15,66 @@ import redis.clients.jedis.Jedis;
  */
 public class RedisDataInteractor {
 
-    private Jedis jedis;
+    private String redisHostName;
+
+    private Integer redisHostPort;
+
+    private final Logger redisDataInteractorLogger = LoggerFactory.getLogger(this.getClass());
 
     public RedisDataInteractor(String serverHostName) {
-        String redisHost = serverHostName.split("[:]")[0];
-        Integer redisPort = Integer.parseInt(serverHostName.split("[:]")[1]);
-        jedis = new Jedis(redisHost, redisPort);
+        redisHostName = serverHostName.split("[:]")[0];
+        redisHostPort = Integer.parseInt(serverHostName.split("[:]")[1]);
     }
 
     public void putDataToRedis(HbaseDataEntity hbaseDataEntity) {
-        jedis.set(hbaseDataEntity.getValueAsByte(), hbaseDataEntity.getKeyAsByte());
+        Jedis jedis = this.getJedis();
+        try {
+            jedis.set(hbaseDataEntity.getValueAsByte(), hbaseDataEntity.getKeyAsByte());
+        } catch (Exception e) {
+            redisDataInteractorLogger.error("ERROR: {}", e);
+            throw new RuntimeException(e);
+        } finally {
+            if (jedis != null && jedis.isConnected()) {
+                jedis.close();
+            }
+        }
     }
 
     public HbaseDataEntity getDataFromRedis(byte[] hbaseValue) {
-        byte[] hbaseKey = jedis.get(hbaseValue);
-        if (hbaseKey == null) {
-            return null;
+        Jedis jedis = this.getJedis();
+        try {
+            byte[] hbaseKey = jedis.get(hbaseValue);
+            if (hbaseKey == null) {
+                return null;
+            }
+            HbaseDataEntity hbaseDataEntity = new HbaseDataEntity(hbaseKey, hbaseValue);
+            return hbaseDataEntity;
+        } catch (Exception e) {
+            redisDataInteractorLogger.error("ERROR: {}", e);
+            throw new RuntimeException(e);
+        } finally {
+            if (jedis != null && jedis.isConnected()) {
+                jedis.close();
+            }
         }
-        HbaseDataEntity hbaseDataEntity = new HbaseDataEntity(hbaseKey, hbaseValue);
-        return hbaseDataEntity;
     }
 
     public void removeDataFromRedis(byte[] key) {
-        jedis.del(key);
+        Jedis jedis = this.getJedis();
+        try {
+            jedis.del(key);
+        } catch (Exception e) {
+            redisDataInteractorLogger.error("ERROR: {}", e);
+            throw new RuntimeException(e);
+        } finally {
+            if (jedis != null && jedis.isConnected()) {
+                jedis.close();
+            }
+        }
     }
 
-    public Jedis getHandle() {
+    public Jedis getJedis() {
+        Jedis jedis = RedisResourceManger.getResourceFromPool(redisHostName, redisHostPort);
         return jedis;
     }
 }
